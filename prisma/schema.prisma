@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+}
+
+enum Role {
+  USER
+  RIDER 
+  RESTAURANT
+}
+ 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique 
+  password  String
+  name      String
+  phone     String?   
+  address   String?
+  long      String?
+  fcmToken  String?  // Add this field for push notifications
+  role      Role @default(USER)
+  restaurants Restaurant[] 
+  rider     Rider?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Restaurant {
+  id        String          @id @default(uuid())
+  userId    String          @unique // Foreign key to User.id, one user per restaurant initially
+  name      String
+  address   String
+  registrationNumber String? // Restaurant-specific field
+  cuisine   String?        // e.g., "Italian", "Chinese"
+  long      String?
+  lat       String?
+  banner    String?       // URL to banner image
+  foodPermit String?    // URL to food permit document
+  isVerified Boolean   @default(false)
+  IDImage   String?    // URL to ID image
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+  orders    Order[]  
+}
+
+model Rider {
+  id        String          @id @default(uuid())
+  userId    String          @unique // Foreign key to User.id, one user per rider
+  licenseNumber String?    // Rider-specific field
+  vehicleType  String?     // e.g., "Bike", "Van"
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+}
+
+model MenuItem {
+  id          String    @id @default(uuid())
+  restaurantId String   // Foreign key to Restaurant.id
+  name        String
+  description String?
+  price       Float
+  image       String?   // URL to item image
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  OrderItems OrderItem[]
+
+  @@index([restaurantId])
+}
+
+model Order {
+  id          String    @id @default(uuid())
+  userId      String    // Foreign key to User.id (customer)
+  restaurantId String   // Foreign key to Restaurant.id
+  riderId     String?   // Foreign key to Rider.id (nullable, assigned when a rider picks up the order)
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  paymentReference String?
+  paymentStatus PaymentStatus @default(PENDING)
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rider       Rider?    @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+
+    @@index([userId])
+  @@index([restaurantId])
+  @@index([paymentReference])
+
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String   // Foreign key to Order.id
+  menuItemId String  // Foreign key to MenuItem.id
+  quantity  Int
+  price     Float    // Price at the time of order
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem  MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
