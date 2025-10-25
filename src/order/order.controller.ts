@@ -34,7 +34,7 @@ import { OrderResponseDto, UpdateOrderStatusDto } from './dto/order.dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Get()  
+  @Get()     
   @ApiOperation({ 
     summary: 'Get all orders for the authenticated user',
     description: 'Returns orders based on user role (customer, restaurant, or rider)'
