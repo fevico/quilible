@@ -1,175 +1,3 @@
-// // order.service.ts
-// import { Injectable } from '@nestjs/common';
-// import { PrismaService } from '../prisma/prisma.service';
-// import { WebsocketGateway } from 'src/webscket/websocket.gateway';
-// import { NotificationService } from 'src/notification/notification.service';
-// import { OrderStatus } from '@prisma/client';
-
-// @Injectable()
-// export class OrderService {
-//   constructor(
-//     private prisma: PrismaService,
-//     private websocketGateway: WebsocketGateway,
-//     private notificationService: NotificationService,
-//   ) {}
-
-//   async acceptOrder(restaurantId: string, orderId: string) {
-//     const order = await this.prisma.order.update({
-//       where: { 
-//         id: orderId,
-//         restaurantId: restaurantId,
-//         status: 'PENDING'
-//       },
-//       data: {
-//         status: 'CONFIRMED',
-//       },
-//       include: {
-//         user: true,
-//         orderItems: {
-//           include: {
-//             menuItem: true,
-//           },
-//         },
-//       },
-//     });
-
-//     if (order) {
-//       // Notify user
-//       this.websocketGateway.notifyUser(order.userId, order);
-      
-//       // Send push notification to user
-//       await this.notificationService.sendPushNotification({
-//         userId: order.userId,
-//         title: 'Order Confirmed!',
-//         body: `Your order #${order.id} has been confirmed by the restaurant`,
-//         data: { orderId: order.id, type: 'ORDER_CONFIRMED' }
-//       });
-
-//       // Notify available riders
-//       this.websocketGateway.notifyRiders(order);
-//     }
-
-//     return order;
-//   }
-
-//   async updateOrderStatus(orderId: string, status: OrderStatus, userId?: string) {
-//     const order = await this.prisma.order.update({
-//       where: { id: orderId },
-//       data: { status },
-//       include: {
-//         user: true,
-//         restaurant: true,
-//         rider: true,
-//         orderItems: {
-//           include: {
-//             menuItem: true,
-//           },
-//         },
-//       },
-//     });
-
-//     // Notify all parties
-//     this.websocketGateway.notifyUser(order.userId, order);
-    
-//     if (order.restaurantId) {
-//       this.websocketGateway.notifyRestaurant(order.restaurantId, order);
-//     }
-    
-//     if (order.riderId) {
-//       this.websocketGateway.notifyRider(order.riderId, order);
-//     }
-
-//     // Send appropriate notifications based on status
-//     await this.sendStatusNotification(order, status);
-
-//     return order;
-//   }
-
-//   async assignRider(orderId: string, riderId: string) {
-//     const order = await this.prisma.order.update({
-//       where: { 
-//         id: orderId,
-//         status: { in: ['CONFIRMED', 'PREPARING'] }
-//       },
-//       data: {
-//         riderId: riderId,
-//         status: 'PREPARING', // or keep current status
-//       },
-//       include: {
-//         user: true,
-//         restaurant: true,
-//         rider: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//         orderItems: {
-//           include: {
-//             menuItem: true,
-//           },
-//         },
-//       },
-//     });
-                  
-//     if (order) {
-//       // Notify user
-//       this.websocketGateway.notifyUser(order.userId, order);
-      
-//       // Notify restaurant
-//       this.websocketGateway.notifyRestaurant(order.restaurantId, order);
-      
-//       // Notify rider
-//       this.websocketGateway.notifyRider(riderId, order);
-
-//       // Send notifications
-//       await this.notificationService.sendPushNotification({
-//         userId: order.userId,
-//         title: 'Rider Assigned!',
-//         body: `A rider has been assigned to your order`,
-//         data: { orderId: order.id, type: 'RIDER_ASSIGNED' }
-//       });
-//     }
-
-//     return order;
-//   }
-
-//   private async sendStatusNotification(order: any, status: OrderStatus) {
-//     let title = '';
-//     let body = '';
-
-//     switch (status) {
-//       case 'PREPARING':
-//         title = 'Order Being Prepared';
-//         body = 'The restaurant has started preparing your order';
-//         break;
-//       case 'READY_FOR_PICKUP':
-//         title = 'Order Ready for Pickup';
-//         body = 'Your order is ready and waiting for rider pickup';
-//         break;
-//       case 'ON_THE_WAY':
-//         title = 'Order On The Way!';
-//         body = 'Your order is on the way to you';
-//         break;
-//       case 'DELIVERED':
-//         title = 'Order Delivered!';
-//         body = 'Your order has been delivered. Enjoy your meal!';
-//         break;
-//     }
-
-//     if (title && body) {
-//       await this.notificationService.sendPushNotification({
-//         userId: order.userId,
-//         title,
-//         body,
-//         data: { orderId: order.id, type: `ORDER_${status}` }
-//       });
-//     }
-//   }
-// }
-
-
-
-// order.service.ts
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -178,12 +6,12 @@ import { WebsocketGateway } from 'src/webscket/websocket.gateway';
 
 @Injectable()
 export class OrderService {
-  constructor(
+  constructor( 
     private prisma: PrismaService,
     private websocketGateway: WebsocketGateway,
     private notificationService: NotificationService,
-  ) {}
-
+  ) {}      
+      
   async createOrder(orderData: {
     userId: string;
     restaurantId: string;
@@ -458,9 +286,9 @@ export class OrderService {
         restaurant: { select: { id: true, name: true } },
         rider: { include: { user: { select: { id: true, name: true } } } },
         orderItems: { include: { menuItem: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+      },   
+      orderBy: { createdAt: 'desc' },      
+    });        
   }
 
   async getOrderById(orderId: string, userId: string, userRole: string) {

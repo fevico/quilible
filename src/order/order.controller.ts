@@ -16,8 +16,8 @@ import { Roles } from '../decorator/role.decorator';
 import { RolesGuard } from '../gurad/role.guard';
 import { OrderStatus } from '@prisma/client';
  import { 
-  ApiTags, 
-  ApiOperation, 
+  ApiTags,    
+  ApiOperation,
   ApiResponse, 
   ApiBearerAuth, 
   ApiParam,
@@ -25,7 +25,7 @@ import { OrderStatus } from '@prisma/client';
 } from '@nestjs/swagger';
 import { OrderResponseDto, UpdateOrderStatusDto } from './dto/order.dto';
 
-@ApiTags('orders')
+@ApiTags('orders')  
 @ApiBearerAuth('JWT-auth') // Adds Bearer token authentication to all endpoints
 @Controller('orders')
 @UseGuards(AuthGuard, RolesGuard)
@@ -73,10 +73,10 @@ export class OrderController {
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'User does not have permission to access this order'
-  })
+  })      
   async getOrder(
-    @Param('orderId', ParseUUIDPipe) orderId: string,
-    @Request() req
+    @Param('orderId', ParseUUIDPipe) orderId: string, 
+    @Request() req     
   ) {
     return this.orderService.getOrderById(orderId, req.user.id, req.user.role);
   }
