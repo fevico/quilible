@@ -286,8 +286,8 @@ export class OrderService {
         restaurant: { select: { id: true, name: true } },
         rider: { include: { user: { select: { id: true, name: true } } } },
         orderItems: { include: { menuItem: true } },
-      },   
-      orderBy: { createdAt: 'desc' },      
+      },
+      orderBy: { createdAt: 'desc' },
     });        
   }
 

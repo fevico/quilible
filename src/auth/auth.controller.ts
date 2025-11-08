@@ -1,7 +1,9 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { CreateNewUser } from './dto/auth.dto';
+import { CreateNewUser, UpdateProfileDto } from './dto/auth.dto';
+import { AuthGuard } from 'src/gurad/auth';
+import type { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -64,5 +66,23 @@ export class AuthController {
       
     // Generate JWT token
     return this.authService.loginUser(user.id, user.name, user.role);
+  }
+
+  @Post('update')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile updated successfully.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized access.',
+  })
+  async updateProfile(@Body() body: UpdateProfileDto, @Req() req: Request) {
+    const userId = req.user?.id as string;
+    return this.authService.updateProfile(userId, body);
   }
 }
