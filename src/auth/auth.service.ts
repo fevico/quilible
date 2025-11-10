@@ -7,7 +7,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateNewUser, UpdateProfileDto } from './dto/auth.dto';
+import {
+  CreateNewUser,
+  UpdateProfileDto,
+  VerifyEmailDto,
+} from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
 import { EmailService } from 'src/email/email.service';
@@ -28,7 +32,7 @@ export class AuthService {
         throw new BadRequestException(
           'User with this credentials already exist',
         );
-      const token = await this.emailService.generateVerificationCode();
+      const token = this.emailService.generateVerificationCode();
       const code = await bcrypt.hash(token, 10);
       const hashPassword = await bcrypt.hash(password, 10);
       const user = await this.prisma.user.create({
@@ -90,6 +94,56 @@ export class AuthService {
     return {
       access_token: accessToken,
     };
+  }
+
+  async resendToken(email: string){
+    try {
+      const user = await this.prisma.user.findFirst({where: {email}})
+      if(!user) throw new UnauthorizedException(`Unathorized request!`)
+              const token = this.emailService.generateVerificationCode();
+      const code = await bcrypt.hash(token, 10);
+      const userToken = await this.prisma.verificationToken.delete({where: {userId: user.id}})
+      await this.prisma.verificationToken.create({
+        data: {
+        token: code,
+        userId: user.id,
+         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
+        }
+      })
+      await this.emailService.sendVerificationEmail(email, user.name, token);
+      return `Verification token sent to user's email`
+    } catch (error) {
+      throw new HttpException(`$${error.message}`, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  async verifyEmail(body: VerifyEmailDto) {
+    try {
+      const { token, userId } = body;
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new UnauthorizedException(`Access denied!`);
+      const userToken = await this.prisma.verificationToken.findFirst({
+        where: { userId },
+      });
+      if (!userToken) throw new UnauthorizedException('Access denied');
+      const now = new Date();
+      if (userToken.expiresAt < now) {
+        // Delete expired token
+        // await this.prisma.verificationToken.delete({
+        //   where: { id: userToken.id }
+        // });
+        throw new UnauthorizedException('Verification token has expired!');
+      }
+
+      const isMatch = await bcrypt.compare(token, userToken.token);
+      if (!isMatch) {
+        throw new UnauthorizedException('Invalid verification token!');
+      }
+      await this.prisma.verificationToken.delete({where: {id: userToken.id}})
+      return {message: "Email verified successfully!"}
+    } catch (error) {
+      throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST)
+    }
   }
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<any> {

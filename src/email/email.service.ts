@@ -7,7 +7,7 @@ export class EmailService {
   private resend: Resend;
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
+    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY')); 
   }
  
   // Generate 4-digit verification code 
@@ -16,27 +16,36 @@ export class EmailService {
   }
 
   // Send verification email with 4-digit code
-  async sendVerificationEmail(email: string, name: string, verificationCode: string) {
-    try {
-      const html = this.getVerificationEmailTemplate(name, verificationCode);
-      
-      const { data, error } = await this.resend.emails.send({
-        from: `${process.env.EMAIL_FROM}`, // Replace with your domain  
-        to: [email],
-        subject: 'Verify Your Email Address',
-        html: html, 
-      });
+ async sendVerificationEmail(email: string, name: string, verificationCode: string) {
+  try {
+    const html = this.getVerificationEmailTemplate(name, verificationCode);
 
-      if (error) {
-        throw new Error(`Resend error: ${error.message}`);
-      }
+    const from = this.configService.get<string>('EMAIL_FROM');
 
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error('Error sending verification email:', error);
-      throw error;
+    const { data, error } = await this.resend.emails.send({
+      from: "quilible@fevico.com.ng",
+      to: [email],
+      subject: 'Verify Your Email Address',
+      html,
+    });
+
+    if (error) {
+      console.error('Resend API Error:', error);
+      throw new Error(`Resend error: ${error.message}`);
     }
+
+    console.log('Verification email sent:', {
+      messageId: data?.id,
+      to: email,
+      code: verificationCode,
+    });
+
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+    throw error;
   }
+}
 
   // Send welcome email
   async sendWelcomeEmail(email: string, name: string) {
@@ -59,7 +68,7 @@ export class EmailService {
       console.error('Error sending welcome email:', error);
       throw error;
     }
-  }
+  }   
 
   // Send password reset email with 4-digit code
   async sendPasswordResetEmail(email: string, name: string, resetCode: string) {

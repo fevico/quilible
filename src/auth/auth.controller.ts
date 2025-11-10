@@ -1,7 +1,7 @@
 import { Body, Controller, Post, HttpCode, HttpStatus, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { CreateNewUser, UpdateProfileDto } from './dto/auth.dto';
+import { CreateNewUser, UpdateProfileDto, VerifyEmailDto } from './dto/auth.dto';
 import { AuthGuard } from 'src/gurad/auth';
 import type { Request } from 'express';
 
@@ -68,6 +68,36 @@ export class AuthController {
     return this.authService.loginUser(user.id, user.name, user.role);
   }
 
+  @Post("verify-email")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify user email with a token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string', example: 'user!2454444' },
+        token: { type: 'string', example: '123456' },
+      },
+      required: ['userId', 'token'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Email successfully verified.',
+    schema: {
+      example: {
+        message: 'Email verified successfully.',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid token or email.',
+  })
+  async verifyEmail(@Body() body: VerifyEmailDto) {
+    return this.authService.verifyEmail(body);
+  }
+
   @Post('update')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -85,4 +115,4 @@ export class AuthController {
     const userId = req.user?.id as string;
     return this.authService.updateProfile(userId, body);
   }
-}
+} 

@@ -67,3 +67,21 @@ export class UpdateProfileDto {
   @IsString()
   long?: string;            // if you really need a “long” field (maybe longitude)
 }
+
+export class VerifyEmailDto {
+  @ApiProperty({
+    description: 'The userId address to verify',
+    example: 'user!2454444',
+  })
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
+
+  @ApiProperty({
+    description: 'The verification token',
+    example: '123456',
+  })
+  @IsNotEmpty()
+  @IsString()
+  token: string;
+}

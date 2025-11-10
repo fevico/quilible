@@ -50,6 +50,7 @@ model User {
   restaurants Restaurant[] 
   rider     Rider?
   orders    Order[]
+  wallet    Wallet?
   verificationTokens VerificationToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,7 +80,7 @@ model Restaurant {
 
 model VerificationToken {
   id        String   @id @default(uuid())
-  userId    String   // Foreign key to User.id
+  userId    String   @unique
   token     String   @unique
   createdAt DateTime @default(now())
   expiresAt DateTime
@@ -100,6 +101,14 @@ model Rider {
 
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders    Order[]
+}
+
+model Wallet{
+  id              String  @id @default(uuid())
+  userId          String @unique
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance         Int @default(0)
+  createdAt       DateTime @default(now())
 }
 
 model MenuItem {
