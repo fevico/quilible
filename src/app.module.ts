@@ -13,6 +13,7 @@ import * as Joi from 'joi';
 import { WebsocketModule } from './webscket/websocket.module';
 import { WebsocketGateway } from './webscket/websocket.gateway';
 import { EmailModule } from './email/email.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { EmailModule } from './email/email.module';
     OrderModule,
     NotificationModule,
     WebsocketModule,
-    EmailModule
+    EmailModule,
+    WalletModule
   ],
   controllers: [AppController],
   providers: [AppService],

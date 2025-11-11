@@ -184,3 +184,23 @@ export class AuthService {
     });
   }
 }
+
+
+// {
+//   "requestSuccessful": true,
+//   "responseMessage": "success",
+//   "responseCode": "0",
+//   "responseBody": {
+//     "walletName": "Staging Wallet - ref1684248425966",
+//     "walletReference": "ref1684248425966",
+//     "customerName": "Monnify Public Account-John Doe",
+//     "customerEmail": "smekiliuwa@moniepoint.com",
+//     "feeBearer": "SELF",
+//     "bvnDetails": {
+//       "bvn": "22199278651",
+//       "bvnDateOfBirth": "1997-03-04"
+//     },
+//     "accountNumber": "7273449646",
+//     "accountName": "Monnify Public Account-John Doe"
+//   }
+// }

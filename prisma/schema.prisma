@@ -107,6 +107,10 @@ model Wallet{
   id              String  @id @default(uuid())
   userId          String @unique
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acountNumber    String
+  accountName     String
+  bankName        String?
+  bvn             String
   balance         Int @default(0)
   createdAt       DateTime @default(now())
 }
